@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Hash the password for security
-    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    
 
     // Prepare and bind
     $stmt = $conn->prepare("INSERT INTO registration (username, phoneno, email, password) VALUES (?, ?, ?, ?)");
