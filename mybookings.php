@@ -13,7 +13,7 @@ $password = "root";
 $dbname = "carren";
  // Adjust to 3306 if your MySQL uses the default port
 
-$conn = new mysqli($servername, $username, $password, $dbname,);
+$conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {
     error_log("Connection failed: " . $conn->connect_error);
     header("Location: dashbord.php?error=" . urlencode("Database connection error."));
