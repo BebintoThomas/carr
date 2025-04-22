@@ -312,9 +312,7 @@ $conn->close();
                     <p>Status: <span class="status <?php echo strtolower($booking['booking_status']); ?>">
                         <?php echo htmlspecialchars($booking['booking_status']); ?>
                     </span></p>
-                    <?php if ($booking['booking_status'] === 'Pending'): ?>
-                        <button class="btn btn-cancel" onclick="showCancelPopup(<?php echo $booking['booking_id']; ?>)">Cancel Booking</button>
-                    <?php endif; ?>
+                   
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
