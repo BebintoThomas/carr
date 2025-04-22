@@ -1,10 +1,10 @@
-
 <?php
-    session_start();
+session_start();
 
-    // Enable error reporting for debugging
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 
     // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
