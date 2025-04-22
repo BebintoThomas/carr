@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 // Fetch bookings for the logged-in user
-$sql = "SELECT b.booking_id, c.car_name, c.car_image, b.pickup_date,b.pickup_time,b.return_date,b.return_time, b.total_amount, b.booking_status
+$sql = "SELECT b.booking_id, c.car_name, c.car_image, b.pickup_date,b.return_date, b.total_amount, b.booking_status
         FROM bookings b
         JOIN cars c ON b.car_id = c.car_id
         WHERE b.user_id = ? 
@@ -56,10 +56,10 @@ $result = $stmt->get_result();
             </div>
             <div class="col-md-7">
                 <h5><?php echo htmlspecialchars($row['car_name']); ?></h5>
-                <p><strong>Pickup:</strong> <?php echo $row['pickup_datetime']; ?></p>
-                <p><strong>Drop-off:</strong> <?php echo $row['dropoff_datetime']; ?></p>
-                <p><strong>Total Price:</strong> ₹<?php echo number_format($row['total_price'], 2); ?></p>
-                <p><strong>Status:</strong> 
+                <p><strong>Pickup:</strong> <?php echo $row['pickup_date']; ?></p>
+                <p><strong>Drop-off:</strong> <?php echo $row['dropoff_date']; ?></p>
+                <p><strong>Total Price:</strong> ₹<?php echo number_format($row['total_amount'], 2); ?></p>
+                <p><strong>booking_status:</strong> 
                     <?php if ($row['status'] == 'Cancelled'): ?>
                         <span class="text-danger">Cancelled</span>
                     <?php else: ?>
