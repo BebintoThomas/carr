@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Database connection
-$servername = "localhost";
+$servername = "my-mysql";
 $username = "root";
 $password = "root";
 $dbname = "carren";
