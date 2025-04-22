@@ -17,7 +17,7 @@ if (!isset($_SESSION['user_id'])) {
 
 // Check if booking_id or payment_id is provided
 if (!isset($_GET['booking_id']) && !isset($_GET['payment_id'])) {
-    header("Location: rental.php");
+    header("Location: dashbord.php");
     exit();
 }
 
