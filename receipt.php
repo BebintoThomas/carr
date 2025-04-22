@@ -1,6 +1,6 @@
 <?php
-// No whitespace or output before this line
-
+// Absolutely no whitespace or output before this line
+session_start();
 require 'db_connect.php';
 
 // Enable error reporting for development (disable in production)
@@ -171,7 +171,7 @@ try {
             </div>
         <?php endif; ?>
 
-        <a href="dashbord.php" class="home-button">Back to Home</a>
+        <a href="dashboard.php" class="home-button">Back to Home</a>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
