@@ -52,7 +52,7 @@ ini_set('display_errors', 1);
         if ($booking_id <= 0) $missing_fields[] = "booking_id";
         if (!$payment_method) $missing_fields[] = "payment_method";
         if ($amount_paid <= 0) $missing_fields[] = "amount_paid";
-        header("Location: payment_error.php?error=" . urlencode("Missing or invalid fields: " . implode(", ", $missing_fields)));
+        header("Location: dashbord.php?error=" . urlencode("Missing or invalid fields: " . implode(", ", $missing_fields)));
         exit;
     }
 
@@ -65,7 +65,7 @@ ini_set('display_errors', 1);
     $check_stmt->fetch();
     $check_stmt->close();
     if ($count == 0) {
-        header("Location: payment_error.php?error=" . urlencode("Invalid booking or car ID."));
+        header("Location: dashbord.php?error=" . urlencode("Invalid booking or car ID."));
         exit;
     }
 
@@ -112,7 +112,7 @@ ini_set('display_errors', 1);
 
         echo "<script>
             alert('Payment successful!');
-            window.location.href = 'receipt.php?booking_id=$booking_id';
+            window.location.href = 'dashbord.php?booking_id=$booking_id';
         </script>";
     } else {
         echo "<script>
