@@ -7,13 +7,13 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$servername = "localhost";
+$servername = "my-mysql";
 $username = "root";
 $password = "root";
 $dbname = "carren";
-$port = 3307;
 
-$conn = new mysqli($servername, $username, $password, $dbname, $port);
+
+$conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {
     echo json_encode(['success' => false, 'message' => 'Database connection failed']);
     exit;
