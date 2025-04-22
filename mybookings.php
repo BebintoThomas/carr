@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 // Fetch bookings for the logged-in user
-$sql = "SELECT b.booking_id, c.car_name, c.car_image, b.pickup_datetime, b.dropoff_datetime, b.total_price, b.status
+$sql = "SELECT b.booking_id, c.car_name, c.car_image, b.pickup_date,b.pickup_time,b.dropoff_date,b.dropoff_time, b.total_amount, b.booking_status
         FROM bookings b
         JOIN cars c ON b.car_id = c.car_id
         WHERE b.user_id = ? 
