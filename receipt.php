@@ -1,6 +1,6 @@
 <?php
 // No whitespace or output before this line
-session_start();
+
 require 'db_connect.php';
 
 // Enable error reporting for development (disable in production)
