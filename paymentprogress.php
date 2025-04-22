@@ -17,7 +17,7 @@ if (!isset($_SESSION['user_id'])) {
 
 // Check if booking_id or payment_id is provided
 if (!isset($_GET['booking_id']) && !isset($_GET['payment_id'])) {
-    header("Location: dashbord.php");
+    header("Location: dashboard.php");
     exit();
 }
 
@@ -209,6 +209,14 @@ $conn->close();
         homeButton.addEventListener("mouseleave", () => {
             gsap.to(homeButton, { scale: 1, duration: 0.3 });
         });
+
+        // Show "Payment Successful" pop-up and redirect
+        <?php if ($receipt && !$error): ?>
+            alert("Payment Successful!");
+            setTimeout(() => {
+                window.location.href = "dashboard.php";
+            }, 100); // Redirect after a short delay to ensure alert is seen
+        <?php endif; ?>
     </script>
 </body>
 </html>
