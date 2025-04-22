@@ -1,38 +1,33 @@
 <?php
-// Absolutely no whitespace or output before this line
 session_start();
 require 'db_connect.php';
 
-// Enable error reporting for development (disable in production)
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header("Location: loginprogress.php");
+    header("Location: loginprogress.php"); // Redirect to login page
     exit();
 }
 
 // Check if booking_id or payment_id is provided
 if (!isset($_GET['booking_id']) && !isset($_GET['payment_id'])) {
-    header("Location: rental.php");
+    header("Location: rental.php"); // Redirect to homepage if no ID
     exit();
 }
 
 // Fetch receipt details
 $booking_id = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : null;
 $payment_id = isset($_GET['payment_id']) ? (int)$_GET['payment_id'] : null;
-$user_id = (int)$_SESSION['user_id'];
+$user_id = $_SESSION['user_id'];
 $error = null;
 $receipt = null;
 
 try {
-    // Query to fetch receipt details
+    // Query based on booking_id or payment_id
     $query = "SELECT 
-                p.payment_id, p.amount_paid AS amount, p.payment_method, p.payment_status, p.payment_date,
-                b.booking_id, b.pickup_date, b.pickup_time, b.return_date, b.return_time, b.total_amount,
-                r.user_id, r.username, r.email,
-                c.car_name, c.price_per_hour, c.car_image
+                p.payment_id AS payment_id, p.amount_paid AS amount, p.payment_method, p.payment_status, p.payment_date,
+                b.booking_id AS booking_id, b.pickup_date, b.pickup_time, b.return_date, b.return_time, b.total_amount,
+                r.user_id AS user_id, r.username, r.email,
+                c.car_name AS car_name, c.price_per_hour, c.car_image
               FROM payments p
               JOIN bookings b ON p.booking_id = b.booking_id
               JOIN registration r ON p.user_id = r.user_id
@@ -55,11 +50,11 @@ try {
     if ($result->num_rows > 0) {
         $receipt = $result->fetch_assoc();
     } else {
-        $error = $booking_id || $payment_id ? "Receipt not found." : "Unauthorized access.";
+        $error = "No receipt found or unauthorized access.";
     }
     $stmt->close();
 } catch (mysqli_sql_exception $e) {
-    $error = "Database error: " . htmlspecialchars($e->getMessage());
+    $error = "Database error: " . $e->getMessage();
 }
 ?>
 
@@ -135,14 +130,14 @@ try {
         <?php elseif ($receipt): ?>
             <div class="receipt-section">
                 <h3>Customer Details</h3>
-                <p><strong>User ID:</strong> <?php echo htmlspecialchars($receipt['user_id']); ?></p>
+                <p><strong>User ID:</strong> <?php echo $receipt['user_id']; ?></p>
                 <p><strong>Username:</strong> <?php echo htmlspecialchars($receipt['username']); ?></p>
                 <p><strong>Email:</strong> <?php echo htmlspecialchars($receipt['email']); ?></p>
             </div>
 
             <div class="receipt-section">
                 <h3>Booking Details</h3>
-                <p><strong>Booking ID:</strong> <?php echo htmlspecialchars($receipt['booking_id']); ?></p>
+                <p><strong>Booking ID:</strong> <?php echo $receipt['booking_id']; ?></p>
                 <p><strong>Pickup Date:</strong> <?php echo date('d-M-Y', strtotime($receipt['pickup_date'])); ?></p>
                 <p><strong>Pickup Time:</strong> <?php echo date('H:i', strtotime($receipt['pickup_time'])); ?></p>
                 <p><strong>Return Date:</strong> <?php echo date('d-M-Y', strtotime($receipt['return_date'])); ?></p>
@@ -150,28 +145,19 @@ try {
                 <p><strong>Total Amount:</strong> ₹<?php echo number_format($receipt['total_amount'], 2); ?></p>
             </div>
 
-            <div class="receipt-section">
-                <h3>Car Details</h3>
-                <p><strong>Car Name:</strong> <?php echo htmlspecialchars($receipt['car_name']); ?></p>
-                <p><strong>Price per Hour:</strong> ₹<?php echo number_format($receipt['price_per_hour'], 2); ?></p>
-                <?php if (!empty($receipt['car_image'])): ?>
-                    <img src="<?php echo htmlspecialchars($receipt['car_image']); ?>" alt="Car Image" class="car-image">
-                <?php else: ?>
-                    <p>No car image available.</p>
-                <?php endif; ?>
-            </div>
+          
 
             <div class="receipt-section">
                 <h3>Payment Details</h3>
-                <p><strong>Payment ID:</strong> <?php echo htmlspecialchars($receipt['payment_id']); ?></p>
+                <p><strong>Payment ID:</strong> <?php echo $receipt['payment_id']; ?></p>
                 <p><strong>Amount:</strong> ₹<?php echo number_format($receipt['amount'], 2); ?></p>
-                <p><strong>Payment Method:</strong> <?php echo ucfirst(str_replace('_', ' ', htmlspecialchars($receipt['payment_method']))); ?></p>
-                <p><strong>Status:</strong> <?php echo ucfirst(htmlspecialchars($receipt['payment_status'])); ?></p>
+                <p><strong>Payment Method:</strong> <?php echo ucfirst(str_replace('_', ' ', $receipt['payment_method'])); ?></p>
+                <p><strong>Status:</strong> <?php echo ucfirst($receipt['payment_status']); ?></p>
                 <p><strong>Date:</strong> <?php echo date('d-M-Y H:i', strtotime($receipt['payment_date'])); ?></p>
             </div>
         <?php endif; ?>
 
-        <a href="dashboard.php" class="home-button">Back to Home</a>
+        <a href="dashbord.php" class="home-button">Back to Home</a>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
