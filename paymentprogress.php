@@ -125,6 +125,25 @@ $conn->close();
             text-align: center;
             margin-bottom: 20px;
         }
+        .success-popup {
+            background: #28a745;
+            color: #fff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .debug {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 1px solid #007bff;
+            padding: 10px;
+            background: #f0f8ff;
+        }
     </style>
 </head>
 <body>
@@ -133,6 +152,25 @@ $conn->close();
             <h2>RentalX Payment Receipt</h2>
             <p>Thank you for your payment!</p>
         </div>
+
+        <!-- Debugging Output -->
+        <?php if (!$receipt || $error): ?>
+            <div class="debug">
+                <p><strong>Debug Info:</strong></p>
+                <p>Receipt: <?php echo $receipt ? 'Set' : 'Null'; ?></p>
+                <p>Error: <?php echo $error ? htmlspecialchars($error) : 'None'; ?></p>
+                <p>Booking ID: <?php echo $booking_id ? $booking_id : 'Not provided'; ?></p>
+                <p>Payment ID: <?php echo $payment_id ? $payment_id : 'Not provided'; ?></p>
+                <p>User ID: <?php echo $user_id; ?></p>
+            </div>
+        <?php endif; ?>
+
+        <!-- Payment Successful Message -->
+        <?php if ($receipt && !$error): ?>
+            <div class="success-popup">
+                Payment Successful!
+            </div>
+        <?php endif; ?>
 
         <?php if ($error): ?>
             <p class="error"><?php echo htmlspecialchars($error); ?></p>
@@ -175,48 +213,7 @@ $conn->close();
             </div>
         <?php endif; ?>
 
-        <a href="dashboard.php" class="home-button">Back to Home</a>
+        <a href="dashbord.php" class="home-button">Back to Home</a>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
-    <script>
-        // GSAP animations
-        gsap.from(".receipt-container", {
-            opacity: 0,
-            y: 50,
-            duration: 1,
-            ease: "power3.out"
-        });
-        gsap.from(".receipt-section", {
-            opacity: 0,
-            x: -20,
-            duration: 0.8,
-            stagger: 0.2,
-            delay: 0.5
-        });
-        gsap.from(".home-button", {
-            opacity: 0,
-            scale: 0.8,
-            duration: 0.5,
-            delay: 1.5
-        });
-
-        // Button hover animation
-        const homeButton = document.querySelector(".home-button");
-        homeButton.addEventListener("mouseenter", () => {
-            gsap.to(homeButton, { scale: 1.05, duration: 0.3 });
-        });
-        homeButton.addEventListener("mouseleave", () => {
-            gsap.to(homeButton, { scale: 1, duration: 0.3 });
-        });
-
-        // Show "Payment Successful" pop-up and redirect
-        <?php if ($receipt && !$error): ?>
-            alert("Payment Successful!");
-            setTimeout(() => {
-                window.location.href = "dashboard.php";
-            }, 100); // Redirect after a short delay to ensure alert is seen
-        <?php endif; ?>
-    </script>
 </body>
 </html>
