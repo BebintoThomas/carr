@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  carr:
+    build: .
+    ports:
+      - "8085:80"
+    networks:
+      - carr-network
+   
+networks:
+  carr-network:
+    external: true
