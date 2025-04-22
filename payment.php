@@ -7,13 +7,13 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Database connection to verify booking
-$servername = "localhost";
+$servername = "my-mysql";
 $username = "root";
 $password = "root";
 $dbname = "carren";
-$port = 3307;
 
-$conn = new mysqli($servername, $username, $password, $dbname, $port);
+
+$conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) {
     error_log("Connection failed: " . $conn->connect_error);
     header("Location: dashbord.php?error=" . urlencode("Database connection error."));
