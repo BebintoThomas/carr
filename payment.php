@@ -1,8 +1,209 @@
 <?php
+session_start();
+require 'db_connect.php';
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: loginprogress.php"); // Redirect to login page
+    exit();
+}
+
+// Check if booking_id or payment_id is provided
+if (!isset($_GET['booking_id']) && !isset($_GET['payment_id'])) {
+    header("Location: rental.php"); // Redirect to homepage if no ID
+    exit();
+}
+
+// Fetch receipt details
+$booking_id = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : null;
+$payment_id = isset($_GET['payment_id']) ? (int)$_GET['payment_id'] : null;
+$user_id = $_SESSION['user_id'];
+$error = null;
+$receipt = null;
+
+try {
+    // Query based on booking_id or payment_id
+    $query = "SELECT 
+                p.payment_id AS payment_id, p.amount_paid AS amount, p.payment_method, p.payment_status, p.payment_date,
+                b.booking_id AS booking_id, b.pickup_date, b.pickup_time, b.return_date, b.return_time, b.total_amount,
+                r.user_id AS user_id, r.username, r.email,
+                c.car_name AS car_name, c.price_per_hour, c.car_image
+              FROM payments p
+              JOIN bookings b ON p.booking_id = b.booking_id
+              JOIN registration r ON p.user_id = r.user_id
+              JOIN cars c ON b.car_id = c.car_id
+              WHERE p.user_id = ? AND ";
+    
+    if ($booking_id) {
+        $query .= "b.booking_id = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("ii", $user_id, $booking_id);
+    } else {
+        $query .= "p.payment_id = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("ii", $user_id, $payment_id);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $receipt = $result->fetch_assoc();
+    } else {
+        $error = "No receipt found or unauthorized access.";
+    }
+    $stmt->close();
+} catch (mysqli_sql_exception $e) {
+    $error = "Database error: " . $e->getMessage();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Receipt - RentalX</title>
+    <link rel="stylesheet" href="css/admin_style.css">
+    <style>
+        .receipt-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .receipt-section {
+            margin-bottom: 20px;
+        }
+        .receipt-section h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .receipt-section p {
+            margin: 5px 0;
+            color: #555;
+        }
+        .car-image {
+            max-width: 200px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .home-button {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px;
+            text-align: center;
+            background: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        .home-button:hover {
+            background: #218838;
+        }
+        .error {
+            color: #dc3545;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <div class="receipt-header">
+            <h2>RentalX Payment Receipt</h2>
+            <p>Thank you for your payment!</p>
+        </div>
+
+        <?php if ($error): ?>
+            <p class="error"><?php echo htmlspecialchars($error); ?></p>
+        <?php elseif ($receipt): ?>
+            <div class="receipt-section">
+                <h3>Customer Details</h3>
+                <p><strong>User ID:</strong> <?php echo $receipt['user_id']; ?></p>
+                <p><strong>Username:</strong> <?php echo htmlspecialchars($receipt['username']); ?></p>
+                <p><strong>Email:</strong> <?php echo htmlspecialchars($receipt['email']); ?></p>
+            </div>
+
+            <div class="receipt-section">
+                <h3>Booking Details</h3>
+                <p><strong>Booking ID:</strong> <?php echo $receipt['booking_id']; ?></p>
+                <p><strong>Pickup Date:</strong> <?php echo date('d-M-Y', strtotime($receipt['pickup_date'])); ?></p>
+                <p><strong>Pickup Time:</strong> <?php echo date('H:i', strtotime($receipt['pickup_time'])); ?></p>
+                <p><strong>Return Date:</strong> <?php echo date('d-M-Y', strtotime($receipt['return_date'])); ?></p>
+                <p><strong>Return Time:</strong> <?php echo date('H:i', strtotime($receipt['return_time'])); ?></p>
+                <p><strong>Total Amount:</strong> ₹<?php echo number_format($receipt['total_amount'], 2); ?></p>
+            </div>
+
+          
+
+            <div class="receipt-section">
+                <h3>Payment Details</h3>
+                <p><strong>Payment ID:</strong> <?php echo $receipt['payment_id']; ?></p>
+                <p><strong>Amount:</strong> ₹<?php echo number_format($receipt['amount'], 2); ?></p>
+                <p><strong>Payment Method:</strong> <?php echo ucfirst(str_replace('_', ' ', $receipt['payment_method'])); ?></p>
+                <p><strong>Status:</strong> <?php echo ucfirst($receipt['payment_status']); ?></p>
+                <p><strong>Date:</strong> <?php echo date('d-M-Y H:i', strtotime($receipt['payment_date'])); ?></p>
+            </div>
+        <?php endif; ?>
+
+        <a href="dashbord.php" class="home-button">Back to Home</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script>
+        // GSAP animations
+        gsap.from(".receipt-container", {
+            opacity: 0,
+            y: 50,
+            duration: 1,
+            ease: "power3.out"
+        });
+        gsap.from(".receipt-section", {
+            opacity: 0,
+            x: -20,
+            duration: 0.8,
+            stagger: 0.2,
+            delay: 0.5
+        });
+        gsap.from(".home-button", {
+            opacity: 0,
+            scale: 0.8,
+            duration: 0.5,
+            delay: 1.5
+        });
+
+        // Button hover animation
+        const homeButton = document.querySelector(".home-button");
+        homeButton.addEventListener("mouseenter", () => {
+            gsap.to(homeButton, { scale: 1.05, duration: 0.3 });
+        });
+        homeButton.addEventListener("mouseleave", () => {
+            gsap.to(homeButton, { scale: 1, duration: 0.3 });
+        });
+    </script>
+</body>
+</html>
+
+this my payment.php and
+this is my paymentprogress.php
+
+<?php
 // No whitespace or output before this line
 session_start();
+require 'db_connect.php';
 
-// Enable error reporting for debugging
+// Enable error reporting for development (disable in production)
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 ini_set('log_errors', 1);
@@ -14,111 +215,54 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Database connection
-$servername = "my-mysql";
-$username = "root";
-$password = "root";
-$dbname = "carren";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    error_log("Connection failed: " . $conn->connect_error, 3, '/var/www/html/errors.log');
-    header("Location: payment_error.php?error=" . urlencode("Database connection failed."));
+// Check if booking_id or payment_id is provided
+if (!isset($_GET['booking_id']) && !isset($_GET['payment_id'])) {
+    header("Location: rental.php");
     exit();
 }
 
-// Collect and sanitize form data
+// Fetch receipt details
+$booking_id = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : null;
+$payment_id = isset($_GET['payment_id']) ? (int)$_GET['payment_id'] : null;
 $user_id = (int)$_SESSION['user_id'];
-$car_id = isset($_POST['car_id']) && $_POST['car_id'] !== '' ? (int)$_POST['car_id'] : 0;
-$booking_id = isset($_POST['booking_id']) && $_POST['booking_id'] !== '' ? (int)$_POST['booking_id'] : 0;
-$payment_method = isset($_POST['payment_method']) ? $conn->real_escape_string($_POST['payment_method']) : '';
-$amount_paid = isset($_POST['amount_paid']) ? floatval($_POST['amount_paid']) : 0;
-$payment_status = "Completed";
+$error = null;
+$receipt = null;
 
-// Optional fields
-$upi_id = !empty($_POST['upi_id']) ? $conn->real_escape_string($_POST['upi_id']) : null;
-$card_number = !empty($_POST['card_number']) ? $conn->real_escape_string($_POST['card_number']) : null;
-$card_number_last4 = $card_number ? substr(preg_replace('/\D/', '', $card_number), -4) : null;
-$card_expiry = !empty($_POST['card_expiry']) ? $conn->real_escape_string($_POST['card_expiry']) : null;
+try {
+    // Query to fetch receipt details
+    $query = "SELECT 
+                p.payment_id, p.amount_paid AS amount, p.payment_method, p.payment_status, p.payment_date,
+                b.booking_id, b.pickup_date, b.pickup_time, b.return_date, b.return_time, b.total_amount,
+                r.user_id, r.username, r.email,
+                c.car_name, c.price_per_hour, c.car_image
+              FROM payments p
+              JOIN bookings b ON p.booking_id = b.booking_id
+              JOIN registration r ON p.user_id = r.user_id
+              JOIN cars c ON b.car_id = c.car_id
+              WHERE p.user_id = ? AND ";
+    
+    if ($booking_id) {
+        $query .= "b.booking_id = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("ii", $user_id, $booking_id);
+    } else {
+        $query .= "p.payment_id = ?";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("ii", $user_id, $payment_id);
+    }
 
-// Validate required fields
-if ($user_id <= 0 || $car_id <= 0 || $booking_id <= 0 || !$payment_method || $amount_paid <= 0) {
-    $missing_fields = [];
-    if ($user_id <= 0) $missing_fields[] = "user_id";
-    if ($car_id <= 0) $missing_fields[] = "car_id";
-    if ($booking_id <= 0) $missing_fields[] = "booking_id";
-    if (!$payment_method) $missing_fields[] = "payment_method";
-    if ($amount_paid <= 0) $missing_fields[] = "amount_paid";
-    header("Location: payment_error.php?error=" . urlencode("Missing or invalid fields: " . implode(", ", $missing_fields)));
-    exit();
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        $receipt = $result->fetch_assoc();
+    } else {
+        $error = $booking_id || $payment_id ? "Receipt not found." : "Unauthorized access.";
+    }
+    $stmt->close();
+} catch (mysqli_sql_exception $e) {
+    $error = "Database error: " . htmlspecialchars($e->getMessage());
 }
 
-// Verify booking exists
-$check_sql = "SELECT COUNT(*) FROM bookings WHERE booking_id = ? AND car_id = ? AND user_id = ?";
-$check_stmt = $conn->prepare($check_sql);
-$check_stmt->bind_param("iii", $booking_id, $car_id, $user_id);
-$check_stmt->execute();
-$check_stmt->bind_result($count);
-$check_stmt->fetch();
-$check_stmt->close();
-
-if ($count == 0) {
-    header("Location: payment_error.php?error=" . urlencode("Invalid booking or car ID."));
-    exit();
-}
-
-// Prepare SQL query
-$sql = "INSERT INTO payments (
-    user_id, 
-    car_id, 
-    booking_id, 
-    payment_method, 
-    upi_id, 
-    card_number_last4, 
-    card_expiry, 
-    amount_paid, 
-    payment_status
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-$stmt = $conn->prepare($sql);
-if (!$stmt) {
-    error_log("Prepare failed: " . $conn->error, 3, '/var/www/html/errors.log');
-    header("Location: payment_error.php?error=" . urlencode("Database query preparation failed."));
-    exit();
-}
-
-// Bind parameters
-$stmt->bind_param(
-    "iiissssds",
-    $user_id,
-    $car_id,
-    $booking_id,
-    $payment_method,
-    $upi_id,
-    $card_number_last4,
-    $card_expiry,
-    $amount_paid,
-    $payment_status
-);
-
-// Execute and handle result
-if ($stmt->execute()) {
-    // Update booking status
-    $update_sql = "UPDATE bookings SET booking_status = 'Confirmed' WHERE booking_id = ?";
-    $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->bind_param("i", $booking_id);
-    $update_stmt->execute();
-    $update_stmt->close();
-
-    header("Location: paymentprogress.php?booking_id=$booking_id");
-    exit();
-} else {
-    error_log("Payment failed: " . $stmt->error, 3, '/var/www/html/errors.log');
-    header("Location: payment.php?booking_id=$booking_id&car_id=$car_id&total_amount=$amount_paid&error=" . urlencode($stmt->error));
-    exit();
-}
-
-// Clean up
-$stmt->close();
 $conn->close();
 ?>
