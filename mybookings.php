@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 
 // Fetch bookings for the logged-in user
-$sql = "SELECT b.booking_id, c.car_name, c.car_image, b.pickup_date,b.return_date, b.total_amount, b.booking_status
+$sql = "SELECT b.booking_id, c.car_name, c.car_image, b.pickup_date, b.pickup_time, b.return_date, b.return_time, b.total_amount, b.booking_status
         FROM bookings b
         JOIN cars c ON b.car_id = c.car_id
         WHERE b.user_id = ? 
@@ -27,7 +27,7 @@ $result = $stmt->get_result();
     <meta charset="UTF-8">
     <title>My Bookings</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="styles.css"> <!-- Your custom CSS if any -->
+    <link rel="stylesheet" href="styles.css"> <!-- Optional custom CSS -->
     <style>
         .car-img {
             width: 100px;
@@ -56,11 +56,11 @@ $result = $stmt->get_result();
             </div>
             <div class="col-md-7">
                 <h5><?php echo htmlspecialchars($row['car_name']); ?></h5>
-                <p><strong>Pickup:</strong> <?php echo $row['pickup_date']; ?></p>
-                <p><strong>Drop-off:</strong> <?php echo $row['dropoff_date']; ?></p>
+                <p><strong>Pickup:</strong> <?php echo $row['pickup_date'] . ' at ' . $row['pickup_time']; ?></p>
+                <p><strong>Drop-off:</strong> <?php echo $row['return_date'] . ' at ' . $row['return_time']; ?></p>
                 <p><strong>Total Price:</strong> ₹<?php echo number_format($row['total_amount'], 2); ?></p>
-                <p><strong>booking_status:</strong> 
-                    <?php if ($row['status'] == 'Cancelled'): ?>
+                <p><strong>Status:</strong> 
+                    <?php if ($row['booking_status'] == 'Cancelled'): ?>
                         <span class="text-danger">Cancelled</span>
                     <?php else: ?>
                         <span class="text-success">Active</span>
@@ -68,7 +68,7 @@ $result = $stmt->get_result();
                 </p>
             </div>
             <div class="col-md-3 text-end">
-                <?php if ($row['status'] != 'Cancelled'): ?>
+                <?php if ($row['booking_status'] != 'Cancelled'): ?>
                     <button class="btn cancel-btn" onclick="confirmCancel(<?php echo $row['booking_id']; ?>)">Cancel</button>
                 <?php else: ?>
                     <button class="btn btn-secondary" disabled>Cancelled</button>
